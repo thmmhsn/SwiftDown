@@ -47,17 +47,7 @@ public struct SwiftDownEditor: UIViewRepresentable {
       swiftDown.storage.markdowner = { self.engine.render($0, offset: $1) }
       swiftDown.storage.applyMarkdown = { m in Theme.applyMarkdown(markdown: m, with: self.theme) }
       swiftDown.storage.applyBody = { Theme.applyBody(with: self.theme) }
-      swiftDown.storage.applyBody = { 
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 10.0  // Set your desired line spacing here
 
-        return [
-            .paragraphStyle: paragraphStyle,
-            .font: UIFont.systemFont(ofSize: 14),  // Adjust font as necessary
-            .foregroundColor: UIColor.label
-        ]
-        
-      }
       swiftDown.delegate = context.coordinator
       swiftDown.isEditable = isEditable
       swiftDown.isScrollEnabled = true
