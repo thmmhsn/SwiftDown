@@ -143,7 +143,7 @@ public struct SwiftDownEditor: UIViewRepresentable {
 #else
   // MARK: - SwiftDownEditor macOS
   public struct SwiftDownEditor: NSViewRepresentable {
-    private var debounceTime = 0.3
+      private var debounceTime = 0.0
     @Binding var text: String {
       didSet {
         onTextChange(text)
@@ -195,21 +195,57 @@ public struct SwiftDownEditor: UIViewRepresentable {
   }
 
   // MARK: - SwiftDownEditor Coordinator macOS
-  extension SwiftDownEditor {
+extension SwiftDownEditor {
     // MARK: - Coordinator
     public class Coordinator: NSObject, NSTextViewDelegate {
       var parent: SwiftDownEditor
       var cancellable: Cancellable?
+
       init(_ parent: SwiftDownEditor) {
         self.parent = parent
+      }
+
+      // Helper Function to Get the Current Line Text
+      private func currentLine(from textView: NSTextView, at location: Int) -> String? {
+          let nsText = textView.string as NSString
+          let lineRange = nsText.lineRange(for: NSRange(location: location, length: 0))
+          return nsText.substring(with: lineRange)
+      }
+
+      // New Helper Function
+      private func nextBullet(for currentLine: String) -> String? {
+        let pattern = "^\\s*([-*]|\\d+[.])\\s+"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
+              let result = regex.firstMatch(in: currentLine, options: [], range: NSRange(location: 0, length: currentLine.utf16.count)) else {
+          return nil
+        }
+        
+        let bulletStart = (currentLine as NSString).substring(with: result.range)
+        
+        if bulletStart.contains(".") {
+          if let number = Int(bulletStart.prefix { $0.isNumber }) {
+            return "\(number + 1). "
+          }
+          return nil
+        }
+        return bulletStart
       }
 
       public func textDidChange(_ notification: Notification) {
         guard let textView = notification.object as? NSTextView else {
           return
         }
-
         self.parent.text = textView.string
+      }
+
+      public func textView(_ textView: NSTextView, shouldChangeTextIn range: NSRange, replacementString: String?) -> Bool {
+        if replacementString == "\n", let currentLine = currentLine(from: textView, at: range.location) {
+          if let newBullet = nextBullet(for: currentLine) {
+            textView.insertText("\n" + newBullet)
+            return false
+          }
+        }
+        return true
       }
 
       public func textViewDidChangeSelection(_ notification: Notification) {
@@ -220,6 +256,8 @@ public struct SwiftDownEditor: UIViewRepresentable {
       }
     }
   }
+
+
 #endif
 
 // MARK: - Common Modifiers
