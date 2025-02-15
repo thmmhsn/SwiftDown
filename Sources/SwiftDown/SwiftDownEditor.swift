@@ -295,13 +295,16 @@ extension SwiftDownEditor {
       
       // --- New: Todo list support ---
       private func nextTodo(for currentLine: String) -> String? {
-        // Look for todo markers like "- [ ]" or "* [ ]"
-        let pattern = "^\\s*[-*]\\s*\\[( |x|X)\\]\\s+"
+        // Updated regex: trailing whitespace is now optional.
+        let pattern = "^\\s*[-*]\\s*\\[(?:\\s|x|X)?\\]\\s*"
         guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
-              let _ = regex.firstMatch(in: currentLine, options: [], range: NSRange(location: 0, length: currentLine.utf16.count)) else {
+              regex.firstMatch(in: currentLine,
+                               options: [],
+                               range: NSRange(location: 0, length: currentLine.utf16.count)) != nil
+        else {
           return nil
         }
-        // Keep the current indentation:
+        // Preserve leading indentation:
         if let leadingWhitespaceRange = currentLine.range(of: "^\\s*", options: .regularExpression) {
           let leadingWhitespace = String(currentLine[leadingWhitespaceRange])
           return leadingWhitespace + "- [ ] "
