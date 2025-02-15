@@ -151,12 +151,12 @@ extension SwiftDownEditor {
     }
     
     private func nextTodo(for currentLine: String) -> String? {
-      // Look for todo markers like "- [ ]" or "* [ ]"
-      let pattern = "^\\s*[-*]\\s*\\[( |x|X)\\]\\s+"
+      // Updated regex: trailing whitespace is now optional.
+      let pattern = "^\\s*[-*]\\s*\\[(?:\\s|x|X)?\\]\\s*"
       guard let regex = try? NSRegularExpression(pattern: pattern, options: []),
-            let _ = regex.firstMatch(in: currentLine,
-                                     options: [],
-                                     range: NSRange(location: 0, length: currentLine.utf16.count))
+            regex.firstMatch(in: currentLine,
+                             options: [],
+                             range: NSRange(location: 0, length: currentLine.utf16.count)) != nil
       else {
         return nil
       }
@@ -167,8 +167,6 @@ extension SwiftDownEditor {
       }
       return "- [ ] "
     }
-    // --- End New ---
-  }
 }
 
   // MARK: - iOS Specifics modifiers
